@@ -2,7 +2,8 @@ print("Hello World")
 import numpy as np
 def circumference(r):
     '''
-    this is a function which calculates the circumference of a circle of radius r.
+    comment in the first function
+    
     '''
     return np.pi*r*2
 def surface(r):
