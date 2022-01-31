@@ -7,3 +7,5 @@ def circumference(r):
     return np.pi*r*2
 def surface(r):
     return np.pi*r**2
+
+print("testing if we can add this to the script")
