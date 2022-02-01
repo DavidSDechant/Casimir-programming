@@ -75,7 +75,7 @@ def all_gates(QuantumCircuit, nr_qubits, initial):
 
 
 def whichqubit(QuantumCircuit, i):
-    """This function determines at which qubit we have to apply the gate, basically reading which qubit is written at the ith row, second column in the QuantumCircuit.
+    """This function determines at which qubit we have to apply the 1-qubit-gate, basically reading which qubit is written at the ith row, second column in the QuantumCircuit.
     
     Input
     -----
@@ -93,6 +93,29 @@ def whichqubit(QuantumCircuit, i):
         if c.isdigit():
             wq = wq + c
     return int(wq)
+
+def whichqubit2(QuantumCircuit, i):
+    """This function determines at which qubits we have to apply the 2-qubit-gate, basically reading which qubits are written at the ith row, second column in the QuantumCircuit.
+    
+    Input
+    -----
+        QuantumCircuit: np.array
+                        The quantum circuit in the form of a numpy array
+        i:              int
+                        The row in quantum Circuit, where the second entry is written in the form q0, q1, which are the wanted qubits
+    Output
+    -----
+        wq:             np.array
+                        number of the wanted qubits as integers
+    """
+    wq1 = ""
+    wq2 = ""
+    for c in QuantumCircuit[i][1]: #reading the integer in the entry of the form q0
+        if c.isdigit() and wq1 == "":
+            wq1 = wq1 + c
+        if c.isdigit() and wq1 != "":
+            wq2 = wq2 + c
+    return np.array([int(wq1), int(wq2)]) 
 
 
 def hadamard(QuantumCircuit, nr_qubits, initial, i):
@@ -132,8 +155,9 @@ def hadamard(QuantumCircuit, nr_qubits, initial, i):
 
 
 #-----------------------main_program-----------------------------------------------------------
-QuantumCircuit = np.loadtxt("QASM-samples/test2.qasm", dtype="str") #loads the circuit from the qasm file to a 2*N matrix
+QuantumCircuit = np.loadtxt("QASM-samples/test3.qasm", dtype="str") #loads the circuit from the qasm file to a 2*N matrix
 nr_qubits = collections.Counter(QuantumCircuit[:,0])["qubit"]   # Gives number of qubits in circuit  
+print(QuantumCircuit)
 
 initial = initial_quantumstate(QuantumCircuit, nr_qubits) #write the initial quantum state as a vector
 print(initial)  
