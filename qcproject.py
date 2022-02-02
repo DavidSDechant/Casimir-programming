@@ -16,6 +16,7 @@
 #--------------------------packages------------------------------------------------
 import numpy as np
 import collections #package used for counting the number of qubits in the circuit
+from itertools import product
 
 #--------------------------functions------------------------------------------------
 
@@ -65,11 +66,11 @@ def all_gates(QuantumCircuit, nr_qubits, initial):
                         The matrix which corresponds to applying the whole circuit
     """
     Circuitmatrix = np.identity(len(initial))
-    for i in range(len(QuantumCircuit)):#going through the circuit and stepwise calculating the circuit matrix
+    for i in range(len(QuantumCircuit)): #going through the circuit and stepwise calculating the circuit matrix
         if QuantumCircuit[i][0] == 'h': #In case a Hadamard gate will be applied at one of the qubits
             Circuitmatrix = hadamard(QuantumCircuit, nr_qubits, initial, i) @ Circuitmatrix
         elif QuantumCircuit[i][0] == 'nop':     
-            Circuitmatrix = nop(QuantumCircuit, nr_qubits, initial, i) @ Circuitmatrix
+            continue
         elif QuantumCircuit[i][0] == 'cnot':  
             print(QuantumCircuit[i][0])
             # Circuitmatrix = cnot(QuantumCircuit, nr_qubits, initial, i) @ Circuitmatrix    
@@ -161,14 +162,14 @@ def hadamard(QuantumCircuit, nr_qubits, initial, i):
             circuit_state = np.kron(circuit_state, h) #tensor product of the current matrix with Hadamard
         else:        
             circuit_state = np.kron(circuit_state, np.identity(2))
-
+    # print("hadamard",circuit_state)
     return circuit_state
 
 
 #---------------------------------------------------------------------------------
 
-def nop(QuantumCircuit, nr_qubits, initial, i):
-    return circuit_state
+# def nop(QuantumCircuit, nr_qubits, initial, i):
+#     return QuantumCircuit
 
 #---------------------------------------------------------------------------------
 
@@ -191,25 +192,42 @@ def cnot(QuantumCircuit, nr_qubits, initial, i):
             
 #------------------------------------------------------------------------------------------------
 
+def plot_probabilities(final_state,nr_qubits):
+    states = np.array(list(product(range(2), repeat=nr_qubits)))
+    bars = []
+    for i in states[:]:
+        i.astype(str)
+        dec =''.join(i.astype(str))
+        bars.append(dec)
 
-#-----------------------main_program-----------------------------------------------------------
-QuantumCircuit = np.loadtxt("QASM-samples/test3.qasm", dtype="str") #loads the circuit from the qasm file to a 2*N matrix
+    y_pos = np.arange(len(bars))
+
+    plt.bar(y_pos,final_state**2)
+    plt.xticks(y_pos, bars)
+    plt.ylabel("Probabilities")
+    plt.xlabel("Quantum state")
+
+#------------------------------------------------------------------------------------------------
+
+
+
+#-----------------------main_program-------------------------------------------------------------
+
+QuantumCircuit = np.loadtxt("QASM-samples/test2.qasm", dtype="str") #loads the circuit from the qasm file to a 2*N matrix
 nr_qubits = collections.Counter(QuantumCircuit[:,0])["qubit"]   # Gives number of qubits in circuit  
-print(QuantumCircuit)
+print("Data from .qasm file \n", QuantumCircuit)
 
-initial = initial_quantumstate(QuantumCircuit, nr_qubits) #write the initial quantum state as a vector
-print(initial)  
+initial_state = initial_quantumstate(QuantumCircuit, nr_qubits) #write the initial quantum state as a vector
+print("Initial quantum state for system in ground state: \n",initial_state)  
 
-Circuit = all_gates(QuantumCircuit, nr_qubits, initial) #write the circuit as a matrix
-print(Circuit)
-#-----------------------------------------------------------------------------------------------
+Circuit = all_gates(QuantumCircuit, nr_qubits, initial_state) #write the circuit as a matrix
+print("Circuit_matrix: \n",Circuit)
 
-import numpy as np
-QuantumCircuit = np.loadtxt("QASM-samples/test1.qasm", dtype="str")
-print(QuantumCircuit[0][1])
-  wq = ""
-    for c in QuantumCircuit[i:1]:
-        if c.isdigit():
-            wq = wq + c
-    return int(wq)
+final_state = initial_state @ Circuit # Compute the quantum state after applying all gates
+print("Final quantum state: \n", final_state)
+
+plot_probabilities(final_state,nr_qubits) # Plot the probability distribution of the final state
+
+#-------------------------------------------------------------------------------------------------
+
 
