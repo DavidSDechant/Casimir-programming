@@ -13,21 +13,6 @@
 # ---
 
 # +
-# ---
-# jupyter:
-#   jupytext:
-#     text_representation:
-#       extension: .py
-#       format_name: light
-#       format_version: '1.5'
-#       jupytext_version: 1.13.6
-#   kernelspec:
-#     display_name: Python 3 (ipykernel)
-#     language: python
-#     name: python3
-# ---
-
-# # +
 #--------------------------packages------------------------------------------------
 import numpy as np
 import collections #package used for counting the number of qubits in the circuit
@@ -261,7 +246,7 @@ def plot_probabilities(final_state,nr_qubits):
 
 #-----------------------main_program-------------------------------------------------------------
 
-QuantumCircuit = np.loadtxt("QASM-samples/test5.qasm", dtype="str") #loads the circuit from the qasm file to a 2*N matrix
+QuantumCircuit = np.loadtxt("QASM-samples/test3.qasm", dtype="str") #loads the circuit from the qasm file to a 2*N matrix
 nr_qubits = collections.Counter(QuantumCircuit[:,0])["qubit"]   # Gives number of qubits in circuit  
 print("Data from .qasm file \n", QuantumCircuit)
 
@@ -274,192 +259,74 @@ print("Circuit_matrix: \n",Circuit)
 final_state = Circuit @ initial_state # Compute the quantum state after applying all gates
 print("Final quantum state: \n", final_state)
 
-plot_probabilities(final_state,nr_qubits) # Plot the probability distribution of the final state
+# plot_probabilities(final_state,nr_qubits) # Plot the probability distribution of the final state
 
 #-------------------------------------------------------------------------------------------------
-# -
 
 
-
-# +
-def plot_probabilities(final_state,nr_qubits):
-    
-    states = np.array(list(product(range(2), repeat=nr_qubits)))
-    bars = []
-    for i in states[:]:
-        i.astype(str)
-        dec =''.join(i.astype(str))
-        bars.append(dec)
-
-    y_pos = np.arange(len(bars))
-
-    plt.bar(y_pos,final_state**2)
-    plt.xticks(y_pos, bars)
-    plt.ylabel("Probabilities")
-    plt.xlabel("Quantum state")
-
-N = 1000 # Number of shots    
-    
-final_state 
-
-projectors=[np.array([[1,0],[0,0]]), np.array([[0,0],[0,1]]) ] # arrray containing the projectors |0><0| and |1><1|
-projectors[0]
-
-
-
-# def project(i,j,reg): # RETURN state with ith qubit of reg projected onto |j>
-#     projected=np.tensordot(projectors[j],reg.psi,(1,i))
-#     return np.moveaxis(projected,0,i)
-
-# project(i,j,final)
-
-# from scipy.linalg import norm 
-
-def measure(i,reg): 
-    projectors=[ np.array([[1,0],[0,0]]), np.array([[0,0],[0,1]]) ] 
-    
-    def project(i,j,reg): 
-        projected=np.tensordot(projectors[j],reg.psi,(1,i))
-        return np.moveaxis(projected,0,i)
-    
-    projected=project(i,0,reg) 
-    norm_projected=norm(projected.flatten()) 
-    if np.random.random()<norm_projected**2: 
-        reg.psi=projected/norm_projected
-        return 0
-    else:
-        projected=project(i,1,reg)
-        reg.psi=projected/norm(projected)
-        return 1
-    
-    
 
 # +
 import numpy as np
-from scipy.linalg import norm 
 
-H_matrix=1/np.sqrt(2)*np.array([[1, 1],
-                                [1,-1]])
-
-CNOT_matrix=np.array([[1,0,0,0],
-                      [0,1,0,0],
-                      [0,0,0,1],
-                      [0,0,1,0]])
-
-CNOT_tensor=np.reshape(CNOT_matrix, (2,2,2,2))
-
-class Reg: 
-    def __init__(self,n):
-        self.n=n
-        self.psi=np.zeros((2,)*n) 
-        self.psi[(0,)*n]=1
-        
-def H(i,reg): 
-    reg.psi=np.tensordot(H_matrix,reg.psi,(1,i)) 
-    reg.psi=np.moveaxis(reg.psi,0,i)
-
-def CNOT(control, target, reg):
-    reg.psi=np.tensordot(CNOT_tensor, reg.psi, ((2,3),(control, target))) 
-    reg.psi=np.moveaxis(reg.psi,(0,1),(control,target))   
-
-def measure(i,reg): 
-    projectors=[ np.array([[1,0],[0,0]]), np.array([[0,0],[0,1]]) ] 
-    
-    def project(i,j,reg): 
-        projected=np.tensordot(projectors[j],reg.psi,(1,i))
-        return np.moveaxis(projected,0,i)
-    
-    projected=project(i,0,reg) 
-    norm_projected=norm(projected.flatten()) 
-    if np.random.random()<norm_projected**2: 
-        reg.psi=projected/norm_projected
-        return 0
+# print("this will be a cnot")
+# cx = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+# print(cx)
+# cxtensor = np.reshape(cx, (2,2,2,2))
+# print(cxtensor)
+# cxback = np.reshape(cxtensor, (4,4))
+# print(cxback)
+nr_qubits = 4
+circuitstate = np.array([[[1,0],[0,0]]]*nr_qubits)
+c = []
+for i in range(nr_qubits):
+    if i == 0:
+        c = np.identity(2)
     else:
-        projected=project(i,1,reg)
-        reg.psi=projected/norm(projected)
-        return 1
-    
-# Example of final usage: create uniform superposition
-reg=Reg(4)
-for i in range(reg.n):
-    H(i,reg)
-    
-print(reg.psi.flatten())
-# -
+        c = np.kron(c, circuitstate[i])
+print(c)
+# circuitstate = np.reshape(circuitstate, (2**nr_qubits, 2**nr_qubits))
+# circuitstate = np.zeros((2,)*nr_qubits) #creating an identity which 
+# circuitstate[(0,)*nr_qubits] = 1
+# # circuitstate = np.reshape(circuitstate, (2**nr_qubits, 2**nr_qubits))
+# print(circuitstate)
+# c = np.reshape(circuitstate, (2**nr_qubits, 2**nr_qubits))
+# print(c)
 
-
-
-# +
-def basis_states(nr_qubits):
-    qubit_state = []   # define empty array 
-    
-    for i in range(nr_qubits):
-        if len(qubit_state) == 0:         
-            qubit_state = np.array([1,0])
-        else:        
-            qubit_state = np.kron(qubit_state, np.array([1,0]))        
-    return qubit_state
-
-basis_states(2)
-
-[int(d) for d in str(n)]
-
-
-
+    # controlqubit = whichqubit(QuantumCircuit, i) #determining which qubit is the control qubit
+    # targetqubit = whichqubit2(QuantumCircuit, i) # determining which qubit the x gate should be applied to
+    # circuit_state = []
+    # for j in range(nr_qubits):
+    #     if j == controlqubit and len(circuit_state) == 0:
+    #         circuit_state = h
+    #     elif len(circuit_state) == 0:         
+    #         circuit_state = np.identity(2)
+    #     elif j == qubitnumber:
+    #         circuit_state = np.kron(circuit_state, h)
+    #     else:        
+    #         circuit_state = np.kron(circuit_state, np.identity(2))
+    #     return circuit_state
 
 
 # +
+#different ansatz for general cnot, doesnt work yet, since i didnt figure out how to translate from the braket-form to a density matrix
+def cnot(QuantumCircuit, nr_qubits, initial, i):
+    print("this will be a cnot")
+    cx = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+    cxtensor = np.reshape(cx, (2,2,2,2)) # writing the cnot gate in braket-form
+    controlqubit = whichqubit(QuantumCircuit, i) #determining which qubit is the control qubit
+    targetqubit = whichqubit2(QuantumCircuit, i) # determining which qubit the x gate should be applied to
+    circuitstate = np.zeros((2,)*nr_qubits) #creating an identity which 
+    circuitstate[(0,)*n] = 1
+    #circuit_state = []
+    # for j in range(nr_qubits):
+    #     if j == controlqubit and len(circuit_state) == 0:
+    #         circuit_state = h
+    #     elif len(circuit_state) == 0:         
+    #         circuit_state = np.identity(2)
+    #     elif j == qubitnumber:
+    #         circuit_state = np.kron(circuit_state, h)
+    #     else:        
+    #         circuit_state = np.kron(circuit_state, np.identity(2))
+    #     return circuit_state
 
-# Python3 code to demonstrate
-# getting numbers from string 
-# using List comprehension + isdigit() +split()
-  
-# initializing string 
-test_string = "There are 23 apples for 4 persons"
-  
-# printing original string 
-print("The original string : " + test_string)
-  
-# using List comprehension + isdigit() +split()
-# getting numbers from string 
-res = [int(i) for i in test_string.split() if i.isdigit()]
-  
-# print result
-print("The numbers list is : " + str(res))
-# -
-
-initial_quantumstate(QuantumCircuit, 2)
-
-# +
-states = np.array(list(product(range(2), repeat=nr_qubits)))
-bars = []
-state_list = []
-for i in states[:]:
-    i.astype(str)
-    dec =''.join(i.astype(str))
-    bars.append(dec)   # May have to reverse the order of bars
-
-for index in bars:
-    label = [int(d) for d in str(index)]
-    print(label)
-    full_state = []
-    for state in label:
-        if state == 0: 
-            qubit_state = np.array([1,0])
-        else:
-            qubit_state = np.array([0,1])
-        
-        if np.size(full_state) == 0:
-            full_state = qubit_state
-        else:
-            full_state = np.kron(full_state, qubit_state)
-        
-    print(full_state)    
-        
-    
-    state_list = np.append(state_list,full_state)
-state_list = np.reshape(state_list,(2**nr_qubits,4))    
-print(state_list)    
-# -
-
-
+            
