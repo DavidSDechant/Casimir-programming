@@ -73,9 +73,6 @@ def all_gates(QuantumCircuit, nr_qubits, initial):
             continue
         elif QuantumCircuit[i][0] == 'cnot':  
             Circuitmatrix = cnot(QuantumCircuit, nr_qubits, initial, i) @ Circuitmatrix  
-            
-        #elif QuantumCircuit[i:0] == 'cnot' or 'c-x':
-        #    Circuitmatrix = cnot() * Circuitmatrix
         else:
             continue
     return Circuitmatrix
@@ -191,60 +188,49 @@ def cnot(QuantumCircuit, nr_qubits, initial, i):
         circuit_state:  np.array 
                         matrix which is applying the CNOT gate at the qubits which are specified at the ith row in QuantumCircuit, and identity on the others
     """
-    print('lol')
-    cx = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
-    cxrev = np.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0]])
+    cx = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]]) #cnot gate on two qubits, control is 0, target is 1
+    cxrev = np.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0]]) #cnot gate on two qubits, control is 1, target 0
     controlqubit = whichqubit2(QuantumCircuit, i)[0] #determining which qubit is the control qubit
     targetqubit = whichqubit2(QuantumCircuit, i)[1] # determining which qubit the x gate should be applied to
     circuit_state = []
     j = 0
-    print('control is', controlqubit)
-    print('target is', targetqubit)
-    print('still here')
     if controlqubit < targetqubit: # we have to apply different CNOT matrices, depending on where the control and target are.
-        print('im in one')
-        print('nr qubits is', nr_qubits)
-        while j < nr_qubits:
-            print('j is', j)
-            if j == controlqubit and len(circuit_state) == 0:
+        while j < nr_qubits: #building the whole circuit matrix, where cnot is at the correct spot, identity else
+            if j == controlqubit and len(circuit_state) == 0: #if cnot is at beginning
                 circuit_state = cx
                 j += 2
-                print('1')
-            elif len(circuit_state) == 0:         
+            elif len(circuit_state) == 0:         #if cnot is not at beginning
                 circuit_state = np.identity(2)
                 j += 1
-                print('2')
-            elif j == controlqubit:
+            elif j == controlqubit:          #here we insert cnot
                 circuit_state = np.kron(circuit_state, cx)
                 j += 2
-                print('3')
-            else:        
+            else:        #identity for the rest of the matrices
                 circuit_state = np.kron(circuit_state, np.identity(2))
                 j += 1
-                print('4')
                 
     else:
-        print('im in two')
-        while j < nr_qubits:
-            if j == targetqubit and len(circuit_state) == 0:
+        while j < nr_qubits:  #building the whole circuit matrix, where cnot is at the correct spot, identity else
+            if j == targetqubit and len(circuit_state) == 0: #if cnot is at beginning
                 circuit_state = cxrev
                 j += 2
-            elif len(circuit_state) == 0:         
+            elif len(circuit_state) == 0:       #if cnot is not at beginning  
                 circuit_state = np.identity(2)
                 j += 1
-            elif j == targetqubit:
+            elif j == targetqubit:   #here we insert cnot
                 circuit_state = np.kron(circuit_state, cxrev)
-                j += 2
-            else:        
+                j += 2 
+            else:          #identity for the rest of the matrices
                 circuit_state = np.kron(circuit_state, np.identity(2))
                 j += 1
-    print(circuit_state)
     return circuit_state
 
             
 #------------------------------------------------------------------------------------------------
 
 def plot_probabilities(final_state,nr_qubits):
+    """This function doesn't work yet, is not used in main
+    """
     states = np.array(list(product(range(2), repeat=nr_qubits)))
     bars = []
     for i in states[:]:
@@ -258,14 +244,14 @@ def plot_probabilities(final_state,nr_qubits):
     plt.xticks(y_pos, bars)
     plt.ylabel("Probabilities")
     plt.xlabel("Quantum state")
-
+    
 #------------------------------------------------------------------------------------------------
 
 
 
 #-----------------------main_program-------------------------------------------------------------
 
-QuantumCircuit = np.loadtxt("QASM-samples/test4.qasm", dtype="str") #loads the circuit from the qasm file to a 2*N matrix
+QuantumCircuit = np.loadtxt("QASM-samples/test3.qasm", dtype="str") #loads the circuit from the qasm file to a 2*N matrix
 nr_qubits = collections.Counter(QuantumCircuit[:,0])["qubit"]   # Gives number of qubits in circuit  
 print("Data from .qasm file \n", QuantumCircuit)
 
