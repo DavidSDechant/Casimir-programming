@@ -72,8 +72,7 @@ def all_gates(QuantumCircuit, nr_qubits, initial):
         elif QuantumCircuit[i][0] == 'nop':     
             continue
         elif QuantumCircuit[i][0] == 'cnot':  
-            print(QuantumCircuit[i][0])
-            # Circuitmatrix = cnot(QuantumCircuit, nr_qubits, initial, i) @ Circuitmatrix    
+            Circuitmatrix = cnot(QuantumCircuit, nr_qubits, initial, i) @ Circuitmatrix  
             
         #elif QuantumCircuit[i:0] == 'cnot' or 'c-x':
         #    Circuitmatrix = cnot() * Circuitmatrix
@@ -117,7 +116,7 @@ def whichqubit2(QuantumCircuit, i):
                         The row in quantum Circuit, where the second entry is written in the form q0, q1, which are the wanted qubits
     Output
     -----
-        wq:             np.array
+        wq1, wq2:       np.array
                         number of the wanted qubits as integers
     """
     wq1 = ""
@@ -125,9 +124,9 @@ def whichqubit2(QuantumCircuit, i):
     for c in QuantumCircuit[i][1]: #reading the integer in the entry of the form q0
         if c.isdigit() and wq1 == "":
             wq1 = wq1 + c
-        if c.isdigit() and wq1 != "":
+        elif c.isdigit() and wq1 != "":
             wq2 = wq2 + c
-    return np.array([int(wq1), int(wq2)]) 
+    return np.array([int(wq1), int(wq2)])  
 
 #---------------------------------------------------------------------------------
 
@@ -174,20 +173,73 @@ def hadamard(QuantumCircuit, nr_qubits, initial, i):
 #---------------------------------------------------------------------------------
 
 def cnot(QuantumCircuit, nr_qubits, initial, i):
-    print("this will be a cnot")
-    # h = np.array([[1, 1], [1, -1]])/np.sqrt(2)
-    # qubitnumber = whichqubit(QuantumCircuit, i)
-    # circuit_state = []
-    # for j in range(nr_qubits):
-    #     if j == qubitnumber and len(circuit_state) == 0:
-    #         circuit_state = h
-    #     elif len(circuit_state) == 0:         
-    #         circuit_state = np.identity(2)
-    #     elif j == qubitnumber:
-    #         circuit_state = np.kron(circuit_state, h)
-    #     else:        
-    #         circuit_state = np.kron(circuit_state, np.identity(2))
-    # return circuit_state
+    """ This function creates a matrix which is applying the CNOT-gate at the qubits which are specified at the ith row in QuantumCircuit, and identity on the other qubits.
+        Only works for nearest neighbour CNOT matrices!
+    Input
+    -----
+        QuantumCircuit: np.array
+                        The whole quantum circuit
+        nr_qubits:      int
+                        number of qubits in the circuit
+        initial:        np.array
+                        The initial quantum state
+        i:              int
+                        The row in quantum Circuit, where the second entry is written in the form q0, which is the wanted qubit
+
+    Output
+    -----
+        circuit_state:  np.array 
+                        matrix which is applying the CNOT gate at the qubits which are specified at the ith row in QuantumCircuit, and identity on the others
+    """
+    print('lol')
+    cx = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+    cxrev = np.array([[1, 0, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0], [0, 1, 0, 0]])
+    controlqubit = whichqubit2(QuantumCircuit, i)[0] #determining which qubit is the control qubit
+    targetqubit = whichqubit2(QuantumCircuit, i)[1] # determining which qubit the x gate should be applied to
+    circuit_state = []
+    j = 0
+    print('control is', controlqubit)
+    print('target is', targetqubit)
+    print('still here')
+    if controlqubit < targetqubit: # we have to apply different CNOT matrices, depending on where the control and target are.
+        print('im in one')
+        print('nr qubits is', nr_qubits)
+        while j < nr_qubits:
+            print('j is', j)
+            if j == controlqubit and len(circuit_state) == 0:
+                circuit_state = cx
+                j += 2
+                print('1')
+            elif len(circuit_state) == 0:         
+                circuit_state = np.identity(2)
+                j += 1
+                print('2')
+            elif j == controlqubit:
+                circuit_state = np.kron(circuit_state, cx)
+                j += 2
+                print('3')
+            else:        
+                circuit_state = np.kron(circuit_state, np.identity(2))
+                j += 1
+                print('4')
+                
+    else:
+        print('im in two')
+        while j < nr_qubits:
+            if j == targetqubit and len(circuit_state) == 0:
+                circuit_state = cxrev
+                j += 2
+            elif len(circuit_state) == 0:         
+                circuit_state = np.identity(2)
+                j += 1
+            elif j == targetqubit:
+                circuit_state = np.kron(circuit_state, cxrev)
+                j += 2
+            else:        
+                circuit_state = np.kron(circuit_state, np.identity(2))
+                j += 1
+    print(circuit_state)
+    return circuit_state
 
             
 #------------------------------------------------------------------------------------------------
@@ -213,7 +265,7 @@ def plot_probabilities(final_state,nr_qubits):
 
 #-----------------------main_program-------------------------------------------------------------
 
-QuantumCircuit = np.loadtxt("QASM-samples/test2.qasm", dtype="str") #loads the circuit from the qasm file to a 2*N matrix
+QuantumCircuit = np.loadtxt("QASM-samples/test4.qasm", dtype="str") #loads the circuit from the qasm file to a 2*N matrix
 nr_qubits = collections.Counter(QuantumCircuit[:,0])["qubit"]   # Gives number of qubits in circuit  
 print("Data from .qasm file \n", QuantumCircuit)
 
@@ -223,11 +275,77 @@ print("Initial quantum state for system in ground state: \n",initial_state)
 Circuit = all_gates(QuantumCircuit, nr_qubits, initial_state) #write the circuit as a matrix
 print("Circuit_matrix: \n",Circuit)
 
-final_state = initial_state @ Circuit # Compute the quantum state after applying all gates
+final_state = Circuit @ initial_state # Compute the quantum state after applying all gates
 print("Final quantum state: \n", final_state)
 
-plot_probabilities(final_state,nr_qubits) # Plot the probability distribution of the final state
+# plot_probabilities(final_state,nr_qubits) # Plot the probability distribution of the final state
 
 #-------------------------------------------------------------------------------------------------
 
 
+
+# +
+import numpy as np
+
+# print("this will be a cnot")
+# cx = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+# print(cx)
+# cxtensor = np.reshape(cx, (2,2,2,2))
+# print(cxtensor)
+# cxback = np.reshape(cxtensor, (4,4))
+# print(cxback)
+nr_qubits = 4
+circuitstate = np.array([[[1,0],[0,0]]]*nr_qubits)
+c = []
+for i in range(nr_qubits):
+    if i == 0:
+        c = np.identity(2)
+    else:
+        c = np.kron(c, circuitstate[i])
+print(c)
+# circuitstate = np.reshape(circuitstate, (2**nr_qubits, 2**nr_qubits))
+# circuitstate = np.zeros((2,)*nr_qubits) #creating an identity which 
+# circuitstate[(0,)*nr_qubits] = 1
+# # circuitstate = np.reshape(circuitstate, (2**nr_qubits, 2**nr_qubits))
+# print(circuitstate)
+# c = np.reshape(circuitstate, (2**nr_qubits, 2**nr_qubits))
+# print(c)
+
+    # controlqubit = whichqubit(QuantumCircuit, i) #determining which qubit is the control qubit
+    # targetqubit = whichqubit2(QuantumCircuit, i) # determining which qubit the x gate should be applied to
+    # circuit_state = []
+    # for j in range(nr_qubits):
+    #     if j == controlqubit and len(circuit_state) == 0:
+    #         circuit_state = h
+    #     elif len(circuit_state) == 0:         
+    #         circuit_state = np.identity(2)
+    #     elif j == qubitnumber:
+    #         circuit_state = np.kron(circuit_state, h)
+    #     else:        
+    #         circuit_state = np.kron(circuit_state, np.identity(2))
+    #     return circuit_state
+
+
+# +
+#different ansatz for general cnot, doesnt work yet, since i didnt figure out how to translate from the braket-form to a density matrix
+def cnot(QuantumCircuit, nr_qubits, initial, i):
+    print("this will be a cnot")
+    cx = np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 0, 1], [0, 0, 1, 0]])
+    cxtensor = np.reshape(cx, (2,2,2,2)) # writing the cnot gate in braket-form
+    controlqubit = whichqubit(QuantumCircuit, i) #determining which qubit is the control qubit
+    targetqubit = whichqubit2(QuantumCircuit, i) # determining which qubit the x gate should be applied to
+    circuitstate = np.zeros((2,)*nr_qubits) #creating an identity which 
+    circuitstate[(0,)*n] = 1
+    #circuit_state = []
+    # for j in range(nr_qubits):
+    #     if j == controlqubit and len(circuit_state) == 0:
+    #         circuit_state = h
+    #     elif len(circuit_state) == 0:         
+    #         circuit_state = np.identity(2)
+    #     elif j == qubitnumber:
+    #         circuit_state = np.kron(circuit_state, h)
+    #     else:        
+    #         circuit_state = np.kron(circuit_state, np.identity(2))
+    #     return circuit_state
+
+            
